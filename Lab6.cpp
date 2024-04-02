@@ -4,16 +4,18 @@
 #include <ctime>
 #include <oneapi/tbb.h>
 #include <chrono>
+#include <vector>
 
 using namespace std;
 
-const int N = 8;
+const int N = 3000;
+vector<double> solution(N);
 
 int get_random_number(int min, int max) {
     return rand() % (max - min + 1) + min;
 }
 
-void solve_gauss(double** matrix, double x[N]) {
+void solve_gauss(double** matrix) {
     for (int i = 0; i < N - 1; i++) {
         tbb::parallel_for(tbb::blocked_range<int>(i + 1, N), [&](const tbb::blocked_range<int>& range) {
             for (int j = range.begin(); j < range.end(); j++) {
@@ -26,11 +28,11 @@ void solve_gauss(double** matrix, double x[N]) {
     }
 
     for (int i = N - 1; i >= 0; i--) {
-        x[i] = matrix[i][N];
+        solution[i] = matrix[i][N];
         for (int j = i + 1; j < N; j++) {
-            x[i] -= matrix[i][j] * x[j];
+            solution[i] -= matrix[i][j] * solution[j];
         }
-        x[i] = x[i] / matrix[i][i];
+        solution[i] = solution[i] / matrix[i][i];
     }
 }
 
@@ -45,25 +47,23 @@ int main() {
         }
     }
 
-    cout << "Matrix:" << endl;
+    /*cout << "Matrix:" << endl;
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N + 1; ++j) {
             cout << matrix[i][j] << "\t";
         }
         cout << endl;
     }
-    cout << endl;
-
-    double x[N];
+    cout << endl;*/
 
     auto begin = std::chrono::steady_clock::now();
-    solve_gauss(matrix, x);
+    solve_gauss(matrix);
     auto end = std::chrono::steady_clock::now();
     std::chrono::duration<double> solving_time = end - begin;
     
-    cout << "X:\n";
+    cout << "Solution:\n";
     for (int i = 0; i < N; i++) {
-        cout << "x" << i+1 << " = " << x[i] << endl;
+        cout << "x" << i+1 << " = " << solution[i] << endl;
     }
 
     cout << "Solution time: " << solving_time.count() << endl;
